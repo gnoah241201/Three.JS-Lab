@@ -31,7 +31,7 @@ export function createEffects(scene, lab) {
 
   // CO2 bubbles rising from the tube tip.
   const bubbles = new THREE.InstancedMesh(
-    new THREE.SphereGeometry(0.006, 8, 6),
+    new THREE.SphereGeometry(0.006, 10, 8),
     new THREE.MeshStandardMaterial({ color: '#ffffff', transparent: true, opacity: 0.7, roughness: 0.1 }),
     MAX_BUBBLES,
   );
@@ -39,10 +39,11 @@ export function createEffects(scene, lab) {
   bubbles.frustumCulled = false;
   const bState = Array.from({ length: MAX_BUBBLES }, () => ({ x: 0, y: 0, z: 0, v: 0, alive: false }));
   let bubbleBudget = 0;
+  let t = 0;
 
   // Liquid pour stream (origin at the top, scaled down to the surface).
-  const streamMat = new THREE.MeshStandardMaterial({ color: '#d6ecf3', transparent: true, opacity: 0.8 });
-  const streamGeo = new THREE.CylinderGeometry(0.01, 0.006, 1, 10, 1, true);
+  const streamMat = new THREE.MeshPhysicalMaterial({ color: '#d6ecf3', transparent: true, opacity: 0.75, roughness: 0.05, clearcoat: 1, depthWrite: false });
+  const streamGeo = new THREE.CylinderGeometry(0.011, 0.007, 1, 16, 1, true);
   streamGeo.translate(0, -0.5, 0);
   const stream = new THREE.Mesh(streamGeo, streamMat);
   stream.visible = false;
@@ -70,6 +71,7 @@ export function createEffects(scene, lab) {
   return {
     update(snap, dt, pourFrom) {
       const { beaker, volumeL, pouring } = snap;
+      t += dt;
       lab.setLevel(volumeL / BEAKER.maxVolumeL);
       lab.setTurbidity(beaker.turbidity, beaker.liquidColor);
       const topY = lab.liquidTopY();
@@ -109,11 +111,12 @@ export function createEffects(scene, lab) {
         }
         if (b.alive) {
           b.y += b.v * dt;
-          b.x += (Math.random() - 0.5) * 0.004;
+          b.x += Math.sin(t * 12 + i) * 0.0015;
+          b.z += Math.cos(t * 10 + i) * 0.0015;
           if (b.y >= topY) b.alive = false;
         }
         dummy.position.set(b.x, b.y, b.z);
-        dummy.scale.setScalar(b.alive ? 1 : 0);
+        dummy.scale.setScalar(b.alive ? 0.7 + (b.y - BEAKER.wall) * 2 : 0);
         dummy.updateMatrix();
         bubbles.setMatrixAt(i, dummy.matrix);
       }
@@ -124,7 +127,8 @@ export function createEffects(scene, lab) {
       if (stream.visible) {
         streamMat.color.set(reagent.color);
         stream.position.copy(pourFrom);
-        stream.scale.y = Math.max(0.01, pourFrom.y - topY);
+        const w = 1 + Math.sin(t * 23) * 0.12;
+        stream.scale.set(w, Math.max(0.01, pourFrom.y - BEAKER.position.y - topY), w);
       }
       tube.visible = !!(reagent && reagent.kind === 'gas' && pourFrom);
       if (tube.visible) updateTube(pourFrom);

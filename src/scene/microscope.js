@@ -69,11 +69,11 @@ export function createMicroscope(renderer, frameEl) {
   light.position.set(3, 5, 4);
   scene.add(light);
   const camera = new THREE.PerspectiveCamera(40, 1, 0.1, 50);
-  camera.position.set(0, 0, 10);
+  camera.position.set(0, 0, 12.5);
 
   const templates = Object.fromEntries(Object.entries(TREES).map(([k, tree]) => [k, buildTemplate(tree)]));
   const color = new THREE.Color();
-  const atomMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 16, 12), new THREE.MeshStandardMaterial({ roughness: 0.4 }), MAX_ATOMS);
+  const atomMesh = new THREE.InstancedMesh(new THREE.SphereGeometry(1, 20, 14), new THREE.MeshStandardMaterial({ roughness: 0.4 }), MAX_ATOMS);
   atomMesh.setColorAt(0, color.set('#ffffff')); // allocate instanceColor before the first compile
   const bondMesh = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.07, 0.07, 1, 8), new THREE.MeshStandardMaterial({ color: '#9a9187', roughness: 0.5 }), MAX_BONDS);
   for (const m of [atomMesh, bondMesh]) {
@@ -121,6 +121,22 @@ export function createMicroscope(renderer, frameEl) {
     return out.copy(local).applyQuaternion(m.quat).add(m.pos);
   }
 
+  // Layout is read only when something resized, never per frame (avoids forced reflow).
+  const rect = { x: 0, y: 0, w: 0, h: 0, cw: 0, ch: 0 };
+  let rectDirty = true;
+  function measure() {
+    rectDirty = false;
+    const c = renderer.domElement.getBoundingClientRect();
+    const f = frameEl.getBoundingClientRect();
+    Object.assign(rect, { x: f.left - c.left, y: c.bottom - f.bottom, w: f.width, h: f.height, cw: c.width, ch: c.height });
+  }
+  if (frameEl) {
+    const ro = new ResizeObserver(() => { rectDirty = true; });
+    ro.observe(frameEl);
+    ro.observe(renderer.domElement);
+    addEventListener('resize', () => { rectDirty = true; });
+  }
+
   return {
     update(species, dt) {
       const list = counts(species);
@@ -163,8 +179,9 @@ export function createMicroscope(renderer, frameEl) {
           toWorld(b, t.atoms[j].pos, m);
           dir.subVectors(b, a);
           dummy.position.addVectors(a, b).multiplyScalar(0.5);
-          dummy.quaternion.setFromUnitVectors(up, dir.clone().normalize());
-          dummy.scale.set(1, dir.length(), 1);
+          const len = dir.length();
+          dummy.quaternion.setFromUnitVectors(up, dir.divideScalar(len));
+          dummy.scale.set(1, len, 1);
           dummy.updateMatrix();
           bondMesh.setMatrixAt(bi++, dummy.matrix);
         }
@@ -179,24 +196,20 @@ export function createMicroscope(renderer, frameEl) {
     // Draws into the rectangle covered by #microscope-frame (CSS pixels; three applies pixelRatio).
     render() {
       if (!frameEl) return;
-      const canvasRect = renderer.domElement.getBoundingClientRect();
-      const frameRect = frameEl.getBoundingClientRect();
-      const x = frameRect.left - canvasRect.left;
-      const y = canvasRect.bottom - frameRect.bottom;
-      const w = frameRect.width;
-      const h = frameRect.height;
+      if (rectDirty) measure();
+      const { x, y, w, h, cw, ch } = rect;
       if (w <= 0 || h <= 0) return;
       camera.aspect = w / h;
       camera.updateProjectionMatrix();
       renderer.setScissorTest(true);
       renderer.setScissor(x, y, w, h);
       renderer.setViewport(x, y, w, h);
-      renderer.setClearColor('#f3ead8', 1);
+      renderer.setClearColor('#f6efe0', 1);
       renderer.clear();
       renderer.render(scene, camera);
       renderer.setScissorTest(false);
       renderer.setClearColor(0x000000, 0);
-      renderer.setViewport(0, 0, canvasRect.width, canvasRect.height);
+      renderer.setViewport(0, 0, cw, ch);
     },
   };
 }

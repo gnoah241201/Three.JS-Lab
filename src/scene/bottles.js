@@ -1,9 +1,10 @@
 import * as THREE from 'three';
 import { REAGENTS } from '../chem/scenarios.js';
+import { isHeadless } from './setup.js';
 
 const RISER_TOP = 0.06;
 const SHELF_Z = -0.5;
-const SPACING = 0.6;
+const SPACING = 0.9;
 
 function labelMaterial(text) {
   const canvas = document.createElement('canvas');
@@ -49,6 +50,7 @@ function labelMaterial(text) {
 
   const map = new THREE.CanvasTexture(canvas);
   map.colorSpace = THREE.SRGBColorSpace;
+  map.anisotropy = 4;
   return new THREE.MeshStandardMaterial({ map, roughness: 0.9 });
 }
 
@@ -66,7 +68,7 @@ function liquidBottle(reagent) {
   ].map(([x, y]) => new THREE.Vector2(x, y));
   const glass = new THREE.Mesh(
     new THREE.LatheGeometry(profile, 32),
-    new THREE.MeshStandardMaterial({ color: '#8fa79a', roughness: 0.2, transparent: true, opacity: 0.55 }),
+    new THREE.MeshPhysicalMaterial({ color: '#a9c4b6', roughness: 0.08, clearcoat: 1, transparent: true, opacity: 0.35, depthWrite: false }),
   );
   const fill = new THREE.Mesh(
     new THREE.CylinderGeometry(0.085, 0.085, 0.2, 24),
@@ -94,7 +96,6 @@ function gasCylinder(reagent) {
 }
 
 export function createBottles(scene) {
-  const isHeadless = typeof navigator !== 'undefined' && (navigator.webdriver || /HeadlessChrome/i.test(navigator.userAgent));
   const bottles = new Map();
   for (const [key, reagent] of Object.entries(REAGENTS)) {
     const built = reagent.kind === 'gas' ? gasCylinder(reagent) : liquidBottle(reagent);

@@ -1,6 +1,6 @@
 import './ui/styles.css';
 import * as THREE from 'three';
-import { createSetup } from './scene/setup.js';
+import { createSetup, isHeadless } from './scene/setup.js';
 import { createLab, BEAKER } from './scene/lab.js';
 import { createBottles } from './scene/bottles.js';
 import { createEffects } from './scene/effects.js';
@@ -17,6 +17,18 @@ const { renderer, scene, camera, controls } = createSetup(viewport);
 const lab = createLab(scene);
 const { bottles, showFor } = createBottles(scene);
 const effects = createEffects(scene, lab);
+
+// Pointer cursor feedback: grab over a bottle, grabbing while carrying.
+const hoverRay = new THREE.Raycaster();
+const hoverPt = new THREE.Vector2();
+renderer.domElement.addEventListener('pointermove', (e) => {
+  if (drag.held) { renderer.domElement.style.cursor = 'grabbing'; return; }
+  const r = renderer.domElement.getBoundingClientRect();
+  hoverPt.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  hoverRay.setFromCamera(hoverPt, camera);
+  const groups = [...bottles.values()].filter((b) => b.group.visible).map((b) => b.group);
+  renderer.domElement.style.cursor = hoverRay.intersectObjects(groups, true).length ? 'grab' : '';
+});
 const microscope = createMicroscope(renderer, document.getElementById('microscope-frame'));
 const store = createStore();
 const pour = createPourController(store);
@@ -25,8 +37,10 @@ createPanels(document.getElementById('left'), document.getElementById('right'), 
 
 let snap = store.get();
 let shownScenario = null;
+const microEmpty = document.getElementById('microscope-empty');
 function onSnapshot(s) {
   snap = s;
+  microEmpty.hidden = Object.values(s.beaker.species).some((n) => n > 0);
   if (s.scenarioId !== shownScenario) {
     shownScenario = s.scenarioId;
     drag.reset();
@@ -41,7 +55,7 @@ const callouts = createCallouts(document.getElementById('callouts'), camera, [
     num: 1,
     title: 'Cốc phản ứng',
     text: 'Thành phần tính theo tổng số mol đã thêm, không phụ thuộc thứ tự rót.',
-    offset: [70, -110],
+    offset: [60, -120],
     anchor: () => lab.mouth.clone().add(new THREE.Vector3(BEAKER.radius, 0, 0)),
   },
   {
@@ -55,7 +69,7 @@ const callouts = createCallouts(document.getElementById('callouts'), camera, [
     num: 3,
     title: 'Thuốc thử',
     text: 'Kéo tới miệng cốc, giữ để rót.',
-    offset: [-190, -90],
+    offset: [-200, -70],
     anchor: () => {
       const b = bottles.get(SCENARIOS[snap.scenarioId].reagents[0]);
       return b ? b.home.clone().setY(b.home.y + b.mouthHeight) : null;
@@ -70,7 +84,6 @@ addEventListener('blur', () => { keys.slow = false; });
 
 const clock = new THREE.Clock();
 const mouth = new THREE.Vector3();
-const isHeadless = typeof navigator !== 'undefined' && (navigator.webdriver || /HeadlessChrome/i.test(navigator.userAgent));
 let lastRenderTime = 0;
 
 renderer.setAnimationLoop((time) => {
@@ -83,6 +96,7 @@ renderer.setAnimationLoop((time) => {
   drag.update(dt);
   const pourFrom = pour.active && drag.held ? drag.mouthWorld(drag.held, mouth) : null;
   effects.update(snap, dt, pourFrom);
+  lab.update(dt, !!snap.pouring);
   microscope.update(snap.beaker.species, dt);
   controls.update();
   renderer.render(scene, camera);

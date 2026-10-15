@@ -65,6 +65,9 @@ export function createPanels(left, right, store) {
   let meterVals = {};
   let volumeEl = null;
   let lastScenario = null;
+  let lastComp = null;
+  let lastEqs = null;
+  let lastRegion = null;
 
   function buildScenarioParts(sc, s) {
     concEl.replaceChildren();
@@ -120,6 +123,7 @@ export function createPanels(left, right, store) {
     if (s.scenarioId !== lastScenario) {
       lastScenario = s.scenarioId;
       buildScenarioParts(sc, s);
+      lastComp = lastEqs = null;
     }
     for (const btn of scenarioButtons) btn.classList.toggle('active', btn.dataset.id === s.scenarioId);
     for (const key of sc.reagents) {
@@ -128,36 +132,64 @@ export function createPanels(left, right, store) {
     if (volumeEl) volumeEl.textContent = `Thể tích dung dịch: ${Math.round(s.volumeL * 1000)} mL`;
     tEl.textContent = s.beaker.T === null ? 'T = —' : `T = ${fmt(s.beaker.T, 2)}`;
     ratioEl.innerHTML = chemHtml(sc.ratioLabel);
-    regionEl.innerHTML = chemHtml(sc.regions[s.beaker.region].label);
+    const regionHtml = chemHtml(sc.regions[s.beaker.region].label);
+    if (regionEl.innerHTML !== regionHtml) regionEl.innerHTML = regionHtml;
 
     const rows = Object.entries(s.beaker.species).filter(([, n]) => n > 0);
-    compEl.replaceChildren(
-      ...(rows.length ? rows : [['—', null]]).map(([k, n]) => {
-        const tr = document.createElement('tr');
-        const a = document.createElement('td');
-        const b = document.createElement('td');
-        if (n === null) {
-          a.textContent = '—';
-          b.textContent = '';
-        } else {
-          a.innerHTML = chemHtml(SPECIES_LABELS[k] || k);
-          b.textContent = `${fmt(n)} mol`;
-        }
-        tr.append(a, b);
-        return tr;
-      }),
-    );
-    eqsEl.replaceChildren(
-      ...(s.beaker.equations.length ? s.beaker.equations : ['—']).map((eq) => {
-        const div = document.createElement('div');
-        div.className = 'eq';
-        div.innerHTML = eq === '—' ? '—' : chemHtml(eq);
-        return div;
-      }),
-    );
+    const compKey = rows.map(([k, n]) => k + fmt(n)).join('|');
+    if (compKey !== lastComp) {
+      lastComp = compKey;
+      compEl.replaceChildren(
+        ...(rows.length ? rows : [['—', null]]).map(([k, n]) => {
+          const tr = document.createElement('tr');
+          const a = document.createElement('td');
+          const b = document.createElement('td');
+          if (n === null) {
+            a.textContent = '—';
+            b.textContent = '';
+          } else {
+            a.innerHTML = chemHtml(SPECIES_LABELS[k] || k);
+            b.textContent = `${fmt(n)} mol`;
+          }
+          tr.append(a, b);
+          return tr;
+        }),
+      );
+    }
+    const eqKey = s.beaker.equations.join('|');
+    if (eqKey !== lastEqs) {
+      lastEqs = eqKey;
+      eqsEl.replaceChildren(
+        ...(s.beaker.equations.length ? s.beaker.equations : ['—']).map((eq) => {
+          const div = document.createElement('div');
+          div.className = 'eq';
+          div.innerHTML = eq === '—' ? '—' : chemHtml(eq);
+          return div;
+        }),
+      );
+    }
+    if (s.beaker.region !== lastRegion && lastRegion !== null) {
+      regionEl.animate([{ backgroundColor: 'rgba(122, 63, 92, 0.22)' }, { backgroundColor: 'rgba(122, 63, 92, 0)' }], { duration: 900, easing: 'ease-out' });
+    }
+    lastRegion = s.beaker.region;
     chart.draw(s);
   }
 
-  store.subscribe(render);
+  // The store emits every frame while pouring; coalesce DOM updates to ~15 Hz.
+  let pending = null;
+  let lastRun = 0;
+  function schedule(s) {
+    if (pending) { pending = s; return; }
+    pending = s;
+    const wait = Math.max(0, 66 - (performance.now() - lastRun));
+    setTimeout(() => {
+      lastRun = performance.now();
+      const next = pending;
+      pending = null;
+      render(next);
+    }, wait);
+  }
+
+  store.subscribe(schedule);
   render(store.get());
 }

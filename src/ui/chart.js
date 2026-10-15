@@ -1,7 +1,7 @@
 import { SCENARIOS, REAGENTS, SPECIES_LABELS } from '../chem/scenarios.js';
 import { sampleCurve, chartRange } from '../chem/curve.js';
 
-const SERIES_COLORS = ['#4a2a3a', '#3f7d6e'];
+const SERIES_COLORS = ['#6b3450', '#2f7a68'];
 const INK = '#2b2420';
 const MUTED = '#7a6d5d';
 const LINE = '#b9a98c';
@@ -72,7 +72,8 @@ export function createChart(canvas) {
     sc.chartSeries.forEach((k, i) => {
       ctx.strokeStyle = SERIES_COLORS[i % SERIES_COLORS.length];
       ctx.fillStyle = SERIES_COLORS[i % SERIES_COLORS.length];
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 2;
+      ctx.lineJoin = 'round';
       ctx.beginPath();
       curve.points.forEach((p, j) => (j ? ctx.lineTo(X(p.x), Y(p.values[k])) : ctx.moveTo(X(p.x), Y(p.values[k]))));
       ctx.stroke();
