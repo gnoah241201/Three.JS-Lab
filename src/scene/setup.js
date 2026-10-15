@@ -10,7 +10,7 @@ export function createSetup(container) {
   renderer.shadowMap.enabled = !isHeadless;
   if (!isHeadless) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
   renderer.toneMapping = THREE.ACESFilmicToneMapping;
-  renderer.toneMappingExposure = 1.05;
+  renderer.toneMappingExposure = 0.92;
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.prepend(renderer.domElement);
 
@@ -21,7 +21,7 @@ export function createSetup(container) {
   scene.fog = new THREE.Fog('#ece3cf', 4.5, 9);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-  scene.environmentIntensity = 0.7;
+  scene.environmentIntensity = 0.55;
   pmrem.dispose();
 
   const camera = new THREE.PerspectiveCamera(32, 1, 0.05, 50);
@@ -39,7 +39,7 @@ export function createSetup(container) {
   controls.minPolarAngle = Math.PI * 0.15;
   controls.maxPolarAngle = Math.PI * 0.46;
 
-  const sun = new THREE.DirectionalLight('#fff4e2', 2.2);
+  const sun = new THREE.DirectionalLight('#fff4e2', 1.7);
   sun.position.set(2.2, 4, 2.5);
   if (!isHeadless) {
     sun.castShadow = true;

@@ -18,10 +18,11 @@ export function createGlass(geometry, { tint = '#e8f2ee', bodyOpacity = 0.035 } 
   const body = new THREE.Mesh(geometry, new THREE.MeshPhysicalMaterial({
     color: tint, transparent: true, opacity: bodyOpacity, roughness: 0.1, depthWrite: false, side: THREE.DoubleSide,
   }));
+  // FrontSide only: with DoubleSide the inner and outer walls both add reflection and the
+  // glass blows out to white. No clearcoat either (it would be a second specular layer).
   const reflection = new THREE.Mesh(geometry, new THREE.MeshPhysicalMaterial({
-    color: '#000000', roughness: 0.02, metalness: 0, specularIntensity: 1, ior: 1.52, clearcoat: 1,
-    clearcoatRoughness: 0.02, envMapIntensity: 0.9, transparent: true, blending: THREE.AdditiveBlending,
-    depthWrite: false, side: THREE.DoubleSide,
+    color: '#000000', roughness: 0.05, metalness: 0, specularIntensity: 0.6, ior: 1.52,
+    envMapIntensity: 0.45, transparent: true, blending: THREE.AdditiveBlending, depthWrite: false,
   }));
   body.renderOrder = 3;
   reflection.renderOrder = 4;

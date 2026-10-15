@@ -10,10 +10,10 @@ export function createLiquidMaterial({ color = '#ffffff', attenuation = '#e9f6fb
     ior: 1.333,
     roughness: 0.0,
     metalness: 0,
-    specularIntensity: 1,
+    specularIntensity: 0.7,
     attenuationColor: new THREE.Color(attenuation),
     attenuationDistance: 0.8,
-    envMapIntensity: 1.3,
+    envMapIntensity: 0.8,
   });
   setMilk(m, milk);
   return m;
