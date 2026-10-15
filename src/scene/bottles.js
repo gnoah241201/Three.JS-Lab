@@ -1,6 +1,8 @@
 import * as THREE from 'three';
 import { REAGENTS } from '../chem/scenarios.js';
 import { isHeadless } from './setup.js';
+import { createGlass } from './lab.js';
+import { createLiquidMaterial } from './liquid.js';
 
 const RISER_TOP = 0.06;
 const SHELF_Z = -0.5;
@@ -66,13 +68,10 @@ function liquidBottle(reagent) {
   const profile = [
     [0, 0], [0.09, 0], [0.095, 0.02], [0.095, 0.26], [0.05, 0.32], [0.035, 0.34], [0.035, 0.4], [0.042, 0.41], [0.042, 0.42], [0, 0.42],
   ].map(([x, y]) => new THREE.Vector2(x, y));
-  const glass = new THREE.Mesh(
-    new THREE.LatheGeometry(profile, 32),
-    new THREE.MeshPhysicalMaterial({ color: '#a9c4b6', roughness: 0.08, clearcoat: 1, transparent: true, opacity: 0.35, depthWrite: false }),
-  );
+  const glass = createGlass(new THREE.LatheGeometry(profile, 48), { tint: '#cfe3d8', bodyOpacity: 0.14 });
   const fill = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.085, 0.085, 0.2, 24),
-    new THREE.MeshStandardMaterial({ color: reagent.color, roughness: 0.3 }),
+    new THREE.CylinderGeometry(0.086, 0.086, 0.2, 40),
+    createLiquidMaterial({ attenuation: reagent.attenuation, milk: reagent.milk, thickness: 0.17 }),
   );
   fill.position.y = 0.11;
   group.add(glass, fill, label(reagent.label, 0.097, 0.15));
@@ -101,7 +100,7 @@ export function createBottles(scene) {
     const built = reagent.kind === 'gas' ? gasCylinder(reagent) : liquidBottle(reagent);
     built.group.traverse((o) => {
       if (o.isMesh) {
-        if (!isHeadless) o.castShadow = true;
+        if (!isHeadless && !o.material.transparent && !o.material.transmission) o.castShadow = true;
         o.userData.reagent = key;
       }
     });

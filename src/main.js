@@ -105,5 +105,5 @@ renderer.setAnimationLoop((time) => {
 });
 
 if (import.meta.env.DEV || typeof window !== 'undefined') {
-  window.__lab = { renderer, scene, store, getSnap: () => snap };
+  window.__lab = { renderer, scene, store, camera, controls, getSnap: () => snap };
 }

@@ -1,9 +1,10 @@
 // Static data for reagents and scenarios. No logic here except tiny sweep helpers.
 
 export const REAGENTS = {
-  NaOH: { label: 'NaOH', kind: 'liquid', color: '#dfeef2', defaultConc: 1.0 },
-  CaOH2: { label: 'Ca(OH)₂', kind: 'liquid', color: '#eef0ea', defaultConc: 0.5 },
-  AlCl3: { label: 'AlCl₃', kind: 'liquid', color: '#f1ecd6', defaultConc: 1.0 },
+  // attenuation: colour light picks up travelling through the solution; milk: intrinsic cloudiness.
+  NaOH: { label: 'NaOH', kind: 'liquid', color: '#dfeef2', attenuation: '#eef8fb', milk: 0, defaultConc: 1.0 },
+  CaOH2: { label: 'Ca(OH)₂', kind: 'liquid', color: '#eef0ea', attenuation: '#f3f5f0', milk: 0.12, defaultConc: 0.5 },
+  AlCl3: { label: 'AlCl₃', kind: 'liquid', color: '#f1ecd6', attenuation: '#f7efcf', milk: 0, defaultConc: 1.0 },
   CO2: { label: 'CO₂', kind: 'gas', color: '#ffffff' },
 };
 

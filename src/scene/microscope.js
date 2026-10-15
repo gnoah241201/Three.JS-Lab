@@ -208,7 +208,7 @@ export function createMicroscope(renderer, frameEl) {
       renderer.clear();
       renderer.render(scene, camera);
       renderer.setScissorTest(false);
-      renderer.setClearColor(0x000000, 0);
+      
       renderer.setViewport(0, 0, cw, ch);
     },
   };

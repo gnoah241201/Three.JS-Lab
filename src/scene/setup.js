@@ -5,7 +5,7 @@ import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 export const isHeadless = typeof navigator !== 'undefined' && (navigator.webdriver || /HeadlessChrome/i.test(navigator.userAgent));
 
 export function createSetup(container) {
-  const renderer = new THREE.WebGLRenderer({ antialias: !isHeadless, alpha: true, powerPreference: 'high-performance' });
+  const renderer = new THREE.WebGLRenderer({ antialias: !isHeadless, alpha: false, powerPreference: 'high-performance' });
   renderer.setPixelRatio(isHeadless ? 1 : Math.min(window.devicePixelRatio || 1, 2));
   renderer.shadowMap.enabled = !isHeadless;
   if (!isHeadless) renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -14,7 +14,11 @@ export function createSetup(container) {
   renderer.outputColorSpace = THREE.SRGBColorSpace;
   container.prepend(renderer.domElement);
 
+  // Opaque background: refraction (transmission) and additive glass reflections both need
+  // something real behind them; a transparent canvas composites them wrongly.
   const scene = new THREE.Scene();
+  scene.background = new THREE.Color('#ece3cf');
+  scene.fog = new THREE.Fog('#ece3cf', 4.5, 9);
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.7;
