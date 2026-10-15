@@ -1,0 +1,61 @@
+:root {
+  --paper: #efe6d2;
+  --paper-2: #e6dcc5;
+  --ink: #2b2420;
+  --muted: #7a6d5d;
+  --line: #b9a98c;
+  --accent: #4a2a3a;
+  --accent-ink: #f3ead8;
+  --serif: 'Cormorant SC', Georgia, "Times New Roman", serif;
+  --mono: 'JetBrains Mono', system-ui, -apple-system, 'Segoe UI', Roboto, 'DejaVu Sans', sans-serif;
+}
+* { box-sizing: border-box; }
+sub { font-size: 0.75em; vertical-align: sub; line-height: 0; }
+sup { font-size: 0.75em; vertical-align: super; line-height: 0; }
+html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font-family: var(--mono); font-size: 12px; }
+#app {
+  display: grid;
+  grid-template-columns: 300px 1fr 340px;
+  gap: 12px;
+  height: 100vh;
+  padding: 12px;
+  background-image:
+    linear-gradient(var(--paper-2) 1px, transparent 1px),
+    linear-gradient(90deg, var(--paper-2) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+.panel { border: 1px solid var(--line); background: rgba(239, 230, 210, 0.85); padding: 16px; overflow-y: auto; }
+#viewport { position: relative; min-height: 0; border: 1px solid var(--line); overflow: hidden; touch-action: none; }
+#viewport canvas { display: block; width: 100%; height: 100%; }
+h1 { font-family: var(--serif); font-size: 30px; line-height: 1; margin: 4px 0 8px; }
+h2 { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 1px solid var(--line); }
+.brand { font-size: 10px; letter-spacing: 0.2em; color: var(--muted); }
+.note { color: var(--muted); font-size: 10px; }
+button { font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 6px 8px; cursor: pointer; }
+button:hover { border-color: var(--ink); }
+button.active { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.scenario-list { display: grid; gap: 6px; }
+.row { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 4px 0; }
+.row input { width: 72px; font: inherit; color: var(--ink); background: transparent; border: 1px solid var(--line); padding: 4px; }
+.meter-row .val { font-weight: 600; min-width: 84px; text-align: right; }
+.meter-row button { padding: 2px 8px; }
+.t-readout { font-family: var(--serif); font-size: 44px; line-height: 1; margin: 12px 0 2px; }
+.region { color: var(--accent); font-weight: 600; min-height: 2.5em; margin-top: 6px; }
+table.comp { width: 100%; border-collapse: collapse; }
+table.comp td { padding: 3px 0; border-bottom: 1px dashed var(--line); }
+table.comp td:last-child { text-align: right; }
+.eq { padding: 3px 0; }
+#chart { width: 100%; height: 180px; display: block; }
+#hint { position: absolute; left: 12px; top: 12px; color: var(--muted); pointer-events: none; }
+#microscope-frame { position: absolute; right: 16px; bottom: 16px; width: 220px; height: 220px; border: 1px solid var(--ink); pointer-events: none; }
+#microscope-frame span { position: absolute; top: -16px; right: 0; font-size: 9px; letter-spacing: 0.15em; white-space: nowrap; }
+#callouts { position: absolute; inset: 0; pointer-events: none; }
+#callouts svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.callout { position: absolute; max-width: 170px; font-size: 10px; }
+.callout b { display: block; letter-spacing: 0.12em; text-transform: uppercase; }
+.callout .num { display: inline-block; width: 16px; height: 16px; margin-right: 4px; border: 1px solid var(--ink); border-radius: 50%; text-align: center; line-height: 14px; }
+@media (max-width: 900px) {
+  #app { grid-template-columns: 1fr; height: auto; }
+  #viewport { height: 62vh; order: -1; }
+  #microscope-frame { width: 130px; height: 130px; }
+}

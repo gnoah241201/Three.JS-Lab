@@ -1,0 +1,6 @@
+{
+  "name": "Phòng Thí Nghiệm Tỉ Lệ",
+  "description": "Phòng thí nghiệm hóa học ảo 3D mô phỏng phản ứng theo tỉ lệ mol (CO₂ + NaOH, CO₂ + Ca(OH)₂, AlCl₃ + NaOH) với kính hiển vi phân tử.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
